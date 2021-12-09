@@ -1,10 +1,10 @@
-# Element.io/matrix chat-bot for NSC Solution F2 Brandmeld centrale 
-Push serial line messages form NSC Solution F2 Brandmeld centrale to an Element.io/matrix chat room.
+# Chatbot for NSC Solution F2 Brandmeld centrale 
+Push serial line messages from NSC Solution F2 Fire control unit to an Element.io/matrix chatroom.
 
 
 ## Install
 ### clone files into /opt/brandmeldbot
-cd /opt && git clone https://github.com/wie-niet/brandmeldbot.git
+	cd /opt && git clone https://github.com/wie-niet/brandmeldbot.git
 
 
 ### python modules
