@@ -1,5 +1,5 @@
-# Chatbot for NSC Solution F2 Brandmeld centrale 
-Push serial line messages from NSC Solution F2 Fire control unit to an Element.io/matrix chatroom.
+# Chatbot for NSC Solution F2 Fire control unit 
+Push messagesfrom NSC Solution F2 Fire control unit's serialline RS-232 printer interface to an Element.io/matrix chatroom.
 
 
 ## Install
@@ -12,7 +12,8 @@ Push serial line messages from NSC Solution F2 Fire control unit to an Element.i
 	python3 -m pip install pyserial
 
 ### systemd service
-edit if needed, make sure the path and user are set correctly.
+Edit if needed, make sure the path and user are set correctly.
+
 	install -m 644 systemd.brandmeldbot.service /etc/systemd/system/systemd.brandmeldbot.service
 	systemctl daemon-reload
 	systemctl enable brandmeldbot
