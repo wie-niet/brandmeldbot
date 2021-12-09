@@ -97,7 +97,14 @@ if __name__ == '__main__':
 	# Matrix Elelement chat bot
 	#
 	bot_conf = config['matrix-conf']
-	bot = Chatbot(bot_conf.get('host'), bot_conf.get('user'), bot_conf.get('pass'), bot_conf.get('room'))
+	bot = Chatbot(
+		host=bot_conf.get('host'),
+		username=bot_conf.get('username'),
+		password=bot_conf.get('password'),
+		userid=bot_conf.get('userid'),
+		token=bot_conf.get('token'),
+		room=bot_conf.get('room'),
+	)
 
 	# add exit callback: bot.logout()
 	# signal_handler_stop_callbacks_last.append(bot.logout)
@@ -153,3 +160,5 @@ if __name__ == '__main__':
 		logger.info('SELF_RESTART : {} {}'.format(str(sys.argv[0]), str(sys.argv)))
 		os.execve(sys.argv[0], sys.argv, os.environ)
 		quit()
+
+# vim: set noet ts=4 sw=4:

@@ -1,6 +1,7 @@
 
 # element.io SDK
 from matrix_client.client import MatrixClient, MatrixRequestError
+from requests.exceptions import MissingSchema
 from enum import Enum
 
 import matrix_client.client
@@ -30,16 +31,29 @@ class Chatbot:
 	"""Simplified Matrix Chatbot"""
 
 	
-	def __init__(self, host, user, passw, room):
-		# connect with server
-		self.client = MatrixClient(host)
-		logger.info("bot connected with host: {}".format(host))
-		logger.info("matrix_client.client.ENCRYPTION_SUPPORT: {}".format(matrix_client.client.ENCRYPTION_SUPPORT))
-		
+	def __init__(self, host, room, username=None, password=None, userid=None, token=None):
+		if (username or password) and (userid or token):
+			raise Exception(
+				"You should either specify username and password " +
+				"for login authentication, or userid and token for token " +
+				"authentication, but not both.")
+		if username and not password:
+			raise Exception("Missing password")
+		if userid and not token:
+			raise Exception("Missing token")
+		if not username and not userid:
+			raise Exception("No authentication parameters specified")
 
-		# login user
 		try:
-			self.client.login(user, passw)
+			# connect with server
+			self.client = MatrixClient(host, user_id=userid, token=token)
+			logger.info("bot connected with host: {}".format(host))
+			logger.info("matrix_client.client.ENCRYPTION_SUPPORT: {}".format(matrix_client.client.ENCRYPTION_SUPPORT))
+
+			if username:
+				self.client.login(user, passw)
+				logger.info("bot connected as user: {}".format(user))
+
 		except MatrixRequestError as e:
 			print("MatrixRequestError:", e)
 			if e.code == 403:
@@ -55,10 +69,6 @@ class Chatbot:
 			print("DEBUG:", e)
 			# sys.exit(3)
 			raise(e)
-
-		logger.info("bot connected as user: {}".format(user))
-	
-
 
 		# join chat room
 		try:
@@ -141,3 +151,5 @@ class Chatbot:
 		logger.info("bot logged out.")
 		# print("DEBUG: bot --> logout")
 
+
+# vim: set noet ts=4 sw=4:
