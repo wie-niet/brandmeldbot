@@ -46,12 +46,7 @@ class LogReader:
 		
 	
 	def serial_open(self, serial_kwargs={}):
-		"""Generator: read serial port and generate messages.
-		
-		# example:
-		for message in self.serial_reader():
-			...
-		"""
+		"""Open serial port"""
 		with self.lock:
 			if self.loop:
 				raise Exception("serial_reader already running.")
@@ -84,6 +79,12 @@ class LogReader:
 		self.sio = io.TextIOWrapper(io.BufferedRWPair(self.ser, self.ser), encoding=encoding)
 		
 	def serial_reader(self, serial_kwargs={}):
+		"""Generator: read serial port and generate messages.
+		
+		# example:
+		for message in obj.serial_reader():
+			...
+		"""
 		# open serial
 		self.serial_open(serial_kwargs)
 		
