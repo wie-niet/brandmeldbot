@@ -7,7 +7,7 @@ Type=simple
 # Another Type option: forking
 User=root
 WorkingDirectory=/opt/brandmeldbot/
-ExecStart=/opt/brandmeldbot/app
+ExecStart=/opt/brandmeldbot/app.py
 Restart=on-failure
 # Other Restart options: or always, on-abort, etc
 
