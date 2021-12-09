@@ -1,6 +1,7 @@
 
 # element.io SDK
 from matrix_client.client import MatrixClient, MatrixRequestError
+from requests.exceptions import MissingSchema
 from enum import Enum
 
 import matrix_client.client
