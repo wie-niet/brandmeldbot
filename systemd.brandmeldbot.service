@@ -1,0 +1,21 @@
+# install -m 644 systemd.brandmeldbot.service /etc/systemd/system/systemd.brandmeldbot.service
+# systemctl daemon-reload
+# systemctl enable brandmeldbot
+
+
+[Unit]
+Description=Brandmeldbot, matrix chat bot for logging serial messages from NSC Solution F2 Brandmeld centrale
+After=network.target
+
+[Service]
+Type=simple
+# Another Type option: forking
+User=root
+WorkingDirectory=/opt/brandmeldbot/
+ExecStart=/opt/brandmeldbot/app
+Restart=on-failure
+# Other Restart options: or always, on-abort, etc
+
+[Install]
+WantedBy=multi-user.target
+
