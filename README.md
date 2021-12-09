@@ -14,7 +14,7 @@ Push messagesfrom NSC Solution F2 Fire control unit's serialline RS-232 printer 
 ### systemd service
 Edit if needed, make sure the path and user are set correctly.
 
-	install -m 644 systemd.brandmeldbot.service /etc/systemd/system/systemd.brandmeldbot.service
+	install -m 644 systemd.brandmeldbot.service /etc/systemd/system/brandmeldbot.service
 	systemctl daemon-reload
 	systemctl enable brandmeldbot
 
