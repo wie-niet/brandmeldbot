@@ -1,8 +1,3 @@
-# install -m 644 systemd.brandmeldbot.service /etc/systemd/system/systemd.brandmeldbot.service
-# systemctl daemon-reload
-# systemctl enable brandmeldbot
-
-
 [Unit]
 Description=Brandmeldbot, matrix chat bot for logging serial messages from NSC Solution F2 Brandmeld centrale
 After=network.target
