@@ -153,3 +153,5 @@ if __name__ == '__main__':
 		logger.info('SELF_RESTART : {} {}'.format(str(sys.argv[0]), str(sys.argv)))
 		os.execve(sys.argv[0], sys.argv, os.environ)
 		quit()
+
+# vim: set noet ts=4 sw=4:

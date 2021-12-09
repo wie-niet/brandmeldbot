@@ -169,4 +169,4 @@ class LogReader:
 				for line in self._buf:
 					logger.info("serial_reader buffer::: '{}'".format(repr(line)))
 
-
+# vim: set noet ts=4 sw=4:
