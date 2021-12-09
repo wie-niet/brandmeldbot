@@ -8,6 +8,7 @@ Type=simple
 User=root
 WorkingDirectory=/opt/brandmeldbot/
 ExecStart=/opt/brandmeldbot/app.py
+ExecReload=kill -HUP $MAINPID
 Restart=on-failure
 # Other Restart options: or always, on-abort, etc
 
