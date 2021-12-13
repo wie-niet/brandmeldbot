@@ -51,8 +51,8 @@ class Chatbot:
 			logger.info("matrix_client.client.ENCRYPTION_SUPPORT: {}".format(matrix_client.client.ENCRYPTION_SUPPORT))
 
 			if username:
-				self.client.login(user, passw)
-				logger.info("bot connected as user: {}".format(user))
+				self.client.login(username, password)
+				logger.info("bot connected as user: {}".format(username))
 
 		except MatrixRequestError as e:
 			print("MatrixRequestError:", e)
