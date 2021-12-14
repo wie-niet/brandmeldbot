@@ -109,42 +109,17 @@ class Chatbot:
 
 	def talk(self, msg, type=MessageType.NOTICE):
 		"""talk message in any type"""
-		# log msg per line:
-		logger.info("talk: message (type={} size={})".format(MessageType(type),len(msg)))
-		for l in msg.splitlines():
-			logger.info("talk: {}".format(repr(l)))
+		# log msg line:
+		logger.info("talk: type={} '{}')".format(MessageType(type),repr(msg)))
 
 		# send message into chat room
 		if MessageType(type) == MessageType.NOTICE:
-			self.room.send_notice(msg)
+			return self.room.send_notice(msg)
 		elif MessageType(type) == MessageType.TEXT:
-			self.room.send_text(msg)
+			return self.room.send_text(msg)
 		elif MessageType(type) == MessageType.HTML:
-			self.room.send_html(msg)
+			return self.room.send_html(msg)
 
-			
-	def talk_text(self, msg):
-		""" send_text """
-		# log msg per line:
-		logger.info("talk: message (size {})".format(len(msg)))
-		for l in msg.splitlines():
-			logger.info("talk: {}".format(repr(l)))
-
-		# send message into chat room
-		self.room.send_text(msg)
-		
-	def talk_html(self, msg):
-		""" send_html """
-		# log msg per line:
-		logger.info("talk: message (size {})".format(len(msg)))
-		for l in msg.splitlines():
-			logger.info("talk: {}".format(repr(l)))
-
-		# send message into chat room
-		self.room.send_html(msg)
-		
-
-		
 
 	def logout(self):
 		self.client.logout()
