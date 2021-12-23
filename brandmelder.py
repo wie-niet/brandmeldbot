@@ -3,6 +3,7 @@ import serial
 import threading
 import io
 import time
+from datetime import datetime, timedelta
 
 from enum import Enum
 
@@ -46,7 +47,7 @@ class Parser:
 		elif not parent.fertility:
 			logger.debug("Parent not fertile, upgrading secondary")
 			Parser.setParent(child)
-		elif child.bmc_time >= parent.bmc_time + Parser.INFERTILITY_SECS:
+		elif child.bmc_time - parent.bmc_time >= timedelta(seconds=Parser.INFERTILITY_SECS):
 			logger.debug("Parent too old, upgrading secondary")
 			Parser.setParent(child)
 		else:
@@ -241,9 +242,9 @@ class Message:
 	def bmc_time(self):
 		"""parse time from Brand Meld Centrale (line[0] in log)"""
 		try:
-			return time.mktime(time.strptime(self.bmc_time_str, Parser.STRPTIME_FORMAT))
+			return datetime.strptime(self.bmc_time_str, Parser.STRPTIME_FORMAT)
 		except ValueError as e:	
-			logger.warning('bmc_time mktime error: {}. (msg= {})'.format(e, repr(self)))
+			logger.warning('bmc_time parse error: {}. (msg= {})'.format(e, repr(self)))
 			raise(e)
 
 		
