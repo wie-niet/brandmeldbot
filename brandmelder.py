@@ -47,7 +47,7 @@ class Parser:
 		elif not parent.fertility:
 			logger.debug("Parent not fertile, upgrading secondary")
 			Parser.setParent(child)
-		elif child.bmc_time - parent.bmc_time >= timedelta(seconds=Parser.INFERTILITY_SECS):
+		elif child.bmc_time - parent.last_child_bmc_time >= timedelta(seconds=Parser.INFERTILITY_SECS):
 			logger.debug("Parent too old, upgrading secondary")
 			Parser.setParent(child)
 		else:
@@ -247,6 +247,12 @@ class Message:
 			logger.warning('bmc_time parse error: {}. (msg= {})'.format(e, repr(self)))
 			raise(e)
 
+	@property	
+	def last_child_bmc_time(self):
+		"""return the bmc_time of the last child, or our own if no children"""
+		if self.childs:
+			return self.childs[-1].bmc_time
+		return self.bmc_time
 		
 	@property
 	def status(self):
