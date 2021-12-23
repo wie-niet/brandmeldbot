@@ -35,22 +35,25 @@ class Parser:
 		Parser.CURRENT_PARENT_MSG = parent
 	
 	
-	
 	@staticmethod
 	def addChild(child):
-		# add foster parent if parent == None
-		if not Parser.CURRENT_PARENT_MSG:
-			Parser.CURRENT_PARENT_MSG = Message.foster(bmc_time_str=child.bmc_time_str)
-		
-		parent= Parser.CURRENT_PARENT_MSG
-		
-		# only accept children with same bmc_timestamp or les than 2secs younger. 
-		if parent.bmc_time + Parser.INFERTILITY_SECS >= child.bmc_time: # we don't mind check if the child is older than us, that will never happen
-			if parent.fertility:
-				# add child to parent
-				parent.childs.append(child)	
-				# add parent to child
-				child.parent = parent
+		parent = Parser.CURRENT_PARENT_MSG
+
+		# If no parent, it does not accept children or is too old, then the current message becomes a parent instead
+		if not parent:
+			logger.debug("No parent, upgrading secondary")
+			Parser.setParent(child)
+		elif not parent.fertility:
+			logger.debug("Parent not fertile, upgrading secondary")
+			Parser.setParent(child)
+		elif parent.bmc_time + Parser.INFERTILITY_SECS >= child.bmc_time:
+			logger.debug("Parent too old, upgrading secondary")
+			Parser.setParent(child)
+		else:
+			# add child to parent
+			parent.childs.append(child)	
+			# add parent to child
+			child.parent = parent
 			
 		
 	@staticmethod
@@ -247,20 +250,14 @@ class Message:
 		self.parent = None			# placeholder for primary
 		self.childs = []      		# placeholder for secondaries
 		
-		#		
-		# SECONDARY: than i schould have a parent:
-		if self.hierarchy == self.HierarchyType.SECONDARY:			
+		if self.hierarchy == self.HierarchyType.PRIMARY:			
+			# primary messages always become the new parent
+			logger.debug("_parser: setParent'")
+			Parser.setParent(self)
+		else:
 			# make my parent aware of me, their newborn child
 			logger.debug("_parser: addChild'")
 			Parser.addChild(self)
-
-		#
-		# i can have children, so I am the next parent:
-		if self.fertility == self.Fertility.CAN_HAVE_CHILDREN:
-			logger.debug("_parser: setParent'")
-			Parser.setParent(self)
-			
-		
 
 		
 	@property	
