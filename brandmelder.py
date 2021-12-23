@@ -169,13 +169,7 @@ class Message:
 			logger.debug("_parser match Rule 5")
 			self.prio = self.Priority.NORMAL
 			self.hierarchy = self.HierarchyType.SECONDARY
-			self.fertility = self.Fertility(False)
-		
-			# rule 5.b: ... but might also be upgraded to a primary when triggered first.
-			if self.subject in Parser.COLLECTED_ALARMS:
-				logger.debug("_parser match Rule 5.b")
-				self.hierarchy = self.HierarchyType.PRIMARY
-				Parser.COLLECTED_ALARMS.remove(self.subject)
+			self.fertility = self.Fertility(True)
 				
 		# rule 6: status == "BMC Reset" -> Normal priority primary with secondaries
 		elif self.status == "BMC Reset":
