@@ -110,7 +110,6 @@ class Chatbot:
 	# 	else:
 	# 		print(event['type'])
 		
-
 	def talk(self, msg, type=MessageType.NOTICE):
 		"""talk message in any type"""
 		# log msg line:
@@ -123,6 +122,33 @@ class Chatbot:
 			return self.room.send_text(msg)
 		elif MessageType(type) == MessageType.HTML:
 			return self.room.send_html(msg)
+
+	def update_talk(self, event_id, body, body_html=None, room_id=None):
+		"""Update existing message. 
+			a bit reversed engineerd but seems to work.
+		"""
+
+		logger.info("update: body={} body_html={})".format(repr(body),repr(body_html)))
+		
+		# set our own room id if not defined.
+		if not room_id:
+			room_id = self.room.room_id
+		
+		
+		# base message
+		content = {'m.relates_to': {'rel_type': 'm.replace', 'event_id': event_id}, 'm.new_content': {'msgtype': 'm.text'}, 'msgtype': 'm.text'}
+	
+		# add plain body
+		content['body'] = body
+		content['m.new_content']['body'] = body
+
+		# incase of html
+		if body_html:
+			content['m.new_content']['format'] = "org.matrix.custom.html"
+			content['m.new_content']['formatted_body'] = body_html
+		
+		return self.client.api.send_message_event(room_id,'m.room.message', content)
+
 
 
 	def logout(self):

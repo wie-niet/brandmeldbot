@@ -2,30 +2,314 @@ import logging
 import serial
 import threading
 import io
+import time
+
+from enum import Enum
 
 #
 # Serial log reader + parser for NSC Solution F2 Brandmeld centrale
 #
-
-
-# Static parser data
-MSG_END = '- - - - - - - - - - - - - - - - - - - - '
 
 # enable logger
 logger = logging.getLogger(__name__)
 
 
 
-class Message(str):
+
+class Parser:
+	# Config:
+	END_OF_MESSAGE = '- - - - - - - - - - - - - - - - - - - - '
+	STRPTIME_FORMAT = '%d-%m-%Y %H:%M:%S'
+	INFERTILITY_SECS = 2 # how mucht seconds is maximum between BMC timstamp of parent vs. child messages.
+
+	# Cache:
+	COLLECTED_ALARMS = []
+	CURRENT_PARENT_MSG = None
+
+	@staticmethod
+	def setParent(parent):
+		# setting new parent, flush previous
+		Parser.flush()
+		
+		# set new parent:
+		Parser.CURRENT_PARENT_MSG = parent
 	
-	def __init__(self, raw):
+	
+	
+	@staticmethod
+	def addChild(child):
+		# add foster parent if parent == None
+		if not Parser.CURRENT_PARENT_MSG:
+			Parser.CURRENT_PARENT_MSG = Message.foster(bmc_time_str=child.bmc_time_str)
+		
+		parent= Parser.CURRENT_PARENT_MSG
+		
+		# only accept children with same bmc_timestamp or les than 2secs younger. 
+		if parent.bmc_time + Parser.INFERTILITY_SECS >= child.bmc_time: # we don't mind check if the child is older than us, that will never happen
+			if parent.infertility:
+				# add child to parent
+				parent.childs.append(child)	
+				# add parent to child
+				child.parent = parent
+			
+		
+	@staticmethod
+	def clock():
+		pass
+		# check if parent needs to flush
+
+
+	@staticmethod
+	def flush():
+		pass
+		## flush current parent
+
+
+class Message:
+	
+	class HierarchyType(Enum):
+		PRIMARY=1   # reason/cause
+		SECONDARY=2 # effects/consequence
+		UNKNOWN=0
+
+	class Priority(Enum):
+		HIGH=3   
+		NORMAL=2 
+		LOW=1    
+		UNKNOWN=0
+	
+	class Infertility(Enum):
+		CAN_HAVE_CHILDREN=True	
+		CAN_NOT_HAVE_CHILDREN=False
+		NOT_SET=None
+	
+	def __init__(self, raw, meta):
+		# add raw body content (str)
 		self.raw = raw
 		
+		# add meta data (dict)
+		self.meta = meta
+		# meta['secs_before']   
+		# meta['time_begin']    
+		# meta['secs_duration'] 
+
+		## line 1: date + time   -> self.bmc_time (str)
+		## line 2: status        -> self.status   (str)
+		## line 2: subject       -> self.subject  ([str, str, ...])
+
+		# # hierarchy type
+		# self.hierarchy = self.HierarchyType.UNKNOWN
+		# self.prio = self.Priority.UNKNOWN
+		# self.infertility = self.Infertility.NOT_SET
+		#
+		# # placeholder for my parent
+		# self.parent = None
+		#
+		# # placeholder for our childrens
+		# self.childs = []
+		
+		# do magic
+		self._parser()
+		
+		
+		# 
+		# proces layout
+		# self.body = '|'.join(raw.splitlines()[1:])
+		self.body = f'{self.status}: {self.subject} \n[{self.prio}, {self.hierarchy}]'
+
+		# logger.info("message: meta[{:.2f},{:.2f},{:.2f}] '{}' #{}:'{}' ".format(
+		# 	self.meta.get('secs_before', 0),
+		# 	self.meta.get('time_begin', 0), # time.strftime( '%d-%m-%Y %H:%M:%S', time.gmtime(  ....  ))
+		# 	self.meta.get('secs_duration', 0),
+		# 	self.hierarchy,
+		# 	len(self.raw.splitlines()),
+		# 	self.body
+		# ))
+		logger.info("messagage## msg = {}".format(repr(self)))
+		logger.info("messagage _parsed: {}, {}, {}".format(self.hierarchy, self.prio, self.infertility))
+	
+	@staticmethod
+	def foster(bmc_time_str):
+		'''Generate Foster Parent (empty parent to add childs to.)'''
+		# if not bmc_time_str:
+		# 	bmc_time_str = time.strftime('%d-%m-%Y %H:%M:%S',time.gmtime(time.time())
+		
+		msg = Message(bmc_time_str + '\nFoster Parent\nunexpected child messages\n', {})
+		return msg
+		
+
+	def _parser(self):
+		# rule 0: status == "Foster Parent" -> High priority primary with secondaries, + collect subject in active_alarm_cache
+		if self.status == "Foster Parent":
+			logger.debug("_parser match Rule 0")
+			self.prio = self.Priority.NORMAL
+			self.hierarchy = self.HierarchyType.PRIMARY
+			self.infertility = self.Infertility(True)
+
+		# rule 1: status == "Alarm" -> High priority primary with secondaries, + collect subject in active_alarm_cache
+		elif self.status == "Alarm":
+			logger.debug("_parser match Rule 1")
+			self.prio = self.Priority.HIGH
+			self.hierarchy = self.HierarchyType.PRIMARY
+			self.infertility = self.Infertility(True)
+			
+			# add line 2 (subect) to the COLLECTED_ALARMS
+			if self.subject not in Parser.COLLECTED_ALARMS:
+				Parser.COLLECTED_ALARMS.append(self.subject)
+					
+		# rule 2: status == "Hoofdalarm" -> High priority secondary with secondaries (this one is just to make sure that "Hoofdalarm" becomes high prio, even when not preceded by a regular alarm)
+		elif self.status == "Hoofdalarm":
+			logger.debug("_parser match Rule 2")
+			self.prio = self.Priority.HIGH
+			self.hierarchy = self.HierarchyType.SECONDARY
+			self.infertility = self.Infertility(True)
+			
+		# rule 3: status == "Storing" -> High priority primary with secondaries
+		elif self.status == "Storing":
+			logger.debug("_parser match Rule 3")
+			self.prio = self.Priority.HIGH
+			self.hierarchy = self.HierarchyType.PRIMARY
+			self.infertility = self.Infertility(True)
+			
+		# rule 4: status == "Geactiveerd" -> Normal priority secondary without secondaries (without secondaries because I think this is never the cause of something, but I'm not entirely sure)
+		elif self.status == "Geactiveerd":
+			logger.debug("_parser match Rule 4")
+			self.prio = self.Priority.NORMAL
+			self.hierarchy = self.HierarchyType.SECONDARY
+			self.infertility = self.Infertility(False)
+
+		# rule 5: status == "In rust" -> Normal priority secondary with secondaries (this will often be triggered as a secondary, but might also be upgraded to a primary when triggered first)
+		elif self.status == "In rust":
+			logger.debug("_parser match Rule 5")
+			self.prio = self.Priority.NORMAL
+			self.hierarchy = self.HierarchyType.SECONDARY
+			self.infertility = self.Infertility(False)
+		
+			# rule 5.b: ... but might also be upgraded to a primary when triggered first.
+			if self.subject in Parser.COLLECTED_ALARMS:
+				logger.debug("_parser match Rule 5.b")
+				self.hierarchy = self.HierarchyType.PRIMARY
+				Parser.COLLECTED_ALARMS.remove(self.subject)
+				
+		# rule 6: status == "BMC Reset" -> Normal priority primary with secondaries
+		elif self.status == "BMC Reset":
+			logger.debug("_parser match Rule 6")
+			self.prio = self.Priority.NORMAL
+			self.hierarchy = self.HierarchyType.PRIMARY
+			self.infertility = self.Infertility(True)
+			
+		# rule 7: status == "Aan" || status == "Uit" -> Normal priority secondary with secondaries ( ???-> Also expected to occur as primary or secondary, for example when disabling all sounders or all doormeldingen, etc.)
+		elif self.status == "Aan" or self.status == "Uit":
+			logger.debug("_parser match Rule 7")
+			self.prio = self.Priority.NORMAL
+			self.hierarchy = self.HierarchyType.SECONDARY
+			self.infertility = self.Infertility(True)
+			
+		# rule 8.1.a: status == "Informatie" && subject matches "Ring .. protocol error 0000" -> Low priority primary without secondaries
+		elif self.status == "Informatie" and " protocol error 0000" in self.subject:
+			logger.debug("_parser match Rule 8.1.a")
+			self.prio = self.Priority.LOW
+			self.hierarchy = self.HierarchyType.PRIMARY
+			self.infertility = self.Infertility(False)
+
+		# rule 8.1.b: status == "Informatie" && subject matches "Ring .. protocol error ...." -> Normal priority primary without secondaries
+		elif self.status == "Informatie" and " protocol error " in self.subject:
+			logger.debug("_parser match Rule 8.1.b")
+			self.prio = self.Priority.NORMAL
+			self.hierarchy = self.HierarchyType.PRIMARY
+			self.infertility = self.Infertility(False)
+			
+		# rule 8.2: status == "Informatie" && subject matches "Tijdprogramma.*" -> Low priority primary with secondaries
+		elif self.status == "Informatie" and "Tijdprogramma " in self.subject:
+			logger.debug("_parser match Rule 8.2")
+			self.prio = self.Priority.LOW
+			self.hierarchy = self.HierarchyType.PRIMARY
+			self.infertility = self.Infertility(True)
+			
+		# rule 8.z: status == "Informatie" -> Normal priority primary without secondaries
+		elif self.status == "Informatie":
+			logger.debug("_parser match Rule 8.z")
+			self.prio = self.Priority.NORMAL
+			self.hierarchy = self.HierarchyType.PRIMARY
+			self.infertility = self.Infertility(False)
+		
+		# rule (All others) -> Normal priority primary without secondaries
+		else:
+			logger.debug("_parser match Rule 'All others'")
+			self.prio = self.Priority.NORMAL
+			self.hierarchy = self.HierarchyType.PRIMARY
+			self.infertility = self.Infertility(False)
+			
+
+		#
+		# let's setup our ancestor tree
+		#
+		self.parent = None			# placeholder for primary
+		self.childs = []      		# placeholder for secondaries
+		
+		#		
+		# SECONDARY: than i schould have a parent:
+		if self.hierarchy == self.HierarchyType.SECONDARY:			
+			# make my parent aware of me, their newborn child
+			logger.debug("_parser: addChild'")
+			Parser.addChild(self)
+
+		#
+		# i can have children, so I am the next parent:
+		if self.infertility == self.Infertility.CAN_HAVE_CHILDREN:
+			logger.debug("_parser: setParent'")
+			Parser.setParent(self)
+			
+		
+
+		
+	@property	
+	def bmc_time_str(self):
+		"""parse time from Brand Meld Centrale (line[0] in log)"""
+		return(self.raw.splitlines()[0])
+
+	@property	
+	def bmc_time(self):
+		"""parse time from Brand Meld Centrale (line[0] in log)"""
+		try:
+			return time.mktime(time.strptime(self.bmc_time_str, Parser.STRPTIME_FORMAT))
+		except ValueError as e:	
+			logger.warning('bmc_time mktime error: {}. (msg= {})'.format(e, repr(self)))
+			raise(e)
+
+		
+	@property
+	def status(self):
+		"""parse status from Brand Meld Centrale (line[1] in log)"""
+		return self.raw.splitlines()[1]
+		
+	@property
+	def subject(self):
+		"""parse subject from Brand Meld Centrale (line[2:] in log)"""
+		return '\n'.join(self.raw.splitlines()[2:])	
+
 	def __str__(self):
-		return self.raw
+		# return self.raw
+		return self.body
+
+	def __repr__(self):
+		# return self.raw
+		return f'{self.__class__.__name__}({repr(self.raw)}, {repr(self.meta)})'
 	
 	def to_html(self):
-		html = "<code>" + self.raw.replace("\n","<br>\n") + "</code>"
+		# html = "<code>" + self.__str__().replace("\n","<br>\n") + "</code>"
+		html = f'<b>{self.status}</b> {self.subject} <br>\n'
+		
+		# add child html:
+		if len(self.childs) != 0:
+			html += "<details><ul>\n"
+			
+			for c in self.childs:
+				html += '<li>' + c.to_html() + '</li>'
+
+			html += "<ul></details>\n"
+
+
 		return html
 
 
@@ -88,6 +372,12 @@ class LogReader:
 		# open serial
 		self.serial_open(serial_kwargs)
 		
+		# datetime tracking for meta_data
+		secs_before   = None
+		time_begin    = None
+		time_end      = time.time()
+		secs_duration = None  # i am just curious for abnormalities
+		
 		# no need to lock here, will catch race conditions at serial.SerialException
 		while self.loop:
 			line=None
@@ -111,13 +401,22 @@ class LogReader:
 			if line and line != "":
 				logger.debug("serial readline: '{}'".format(repr(line)))
 				
-				# see if last line matches MSG_END 
-				if line == MSG_END:
+				# see if last line matches Parser.END_OF_MESSAGE 
+				if line == Parser.END_OF_MESSAGE:
+					# meta data: time_end of this message
+					time_end  = time.time()
+					secs_duration = time_end - time_begin
+
 					# parse Message to callback
-					message = (Message("\n".join(self._buf)))
+					message = Message("\n".join(self._buf), {
+							'secs_before': round(secs_before, 2),    # keep precision readable
+							'time_begin':round(time_begin, 2),       # keep precision readable
+							'secs_duration':round(secs_duration, 2)  # keep precision readable
+						})
 					# flush buffer
 					with self.lock:
 						self._buf.clear()
+						
 					# return message
 					yield(message)
 					
@@ -125,8 +424,15 @@ class LogReader:
 					if self._exit_graceful:
 						self.exit()
 				else:
+					# meta data: time_begin of this message
+					if len(self._buf) == 0:
+						time_begin  = time.time()
+						secs_before = time_begin - time_end # new begin - prev. end
+					
 					with self.lock:
 						self._buf.append(line)
+			# else:
+			# 	# timeout serial.readline()
 
 		# end of loop
 		logger.info('serial_reader loop ended.')
@@ -168,5 +474,7 @@ class LogReader:
 				logger.info('serial_reader buffer not empty, this (partial)message is lost:')
 				for line in self._buf:
 					logger.info("serial_reader buffer::: '{}'".format(repr(line)))
+
+
 
 # vim: set noet ts=4 sw=4:
