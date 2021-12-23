@@ -115,11 +115,6 @@ class Message:
 		self._parser()
 		
 		
-		# 
-		# proces layout
-		# self.body = '|'.join(raw.splitlines()[1:])
-		self.body = f'{self.status}: {self.subject} \n[{self.prio}, {self.hierarchy}]'
-
 		# logger.info("message: meta[{:.2f},{:.2f},{:.2f}] '{}' #{}:'{}' ".format(
 		# 	self.meta.get('secs_before', 0),
 		# 	self.meta.get('time_begin', 0), # time.strftime( '%d-%m-%Y %H:%M:%S', time.gmtime(  ....  ))
@@ -264,12 +259,20 @@ class Message:
 
 	def __str__(self):
 		# return self.raw
-		return self.body
+		return self.to_text()
 
 	def __repr__(self):
 		# return self.raw
 		return f'{self.__class__.__name__}({repr(self.lines)}, {repr(self.meta)})'
 	
+	def to_text(self):
+		text = ' - ' if self.parent else ''
+		text += f'{self.status}: {self.subject}'
+		for c in self.childs:
+			text += c.to_text()
+		return text
+
+
 	def to_html(self):
 		# html = "<code>" + self.__str__().replace("\n","<br>\n") + "</code>"
 		html = f'<b>{self.status}</b> {self.subject} <br>\n'

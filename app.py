@@ -133,13 +133,14 @@ if __name__ == '__main__':
 				# we have a child message with an previous send message: update parent:
 				bot.update_talk(
 					event_id=message.parent.meta['matrix_event_id'],
-					body=message.body,
-					new_body=message.body,
+					body=message.to_text(),
+					new_body=message.parent.to_text(),
 					new_body_html=message.parent.to_html(),
 				)
 		else:
 			# simply snd message:
 			matrix = bot.talk(
+				body=message.to_text(),
 				body_html=message.to_html(),
 			)
 			message.meta['matrix_event_id'] = matrix['event_id']
