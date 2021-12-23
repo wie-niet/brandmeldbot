@@ -44,6 +44,9 @@ class Chatbot:
 		if not username and not userid:
 			raise Exception("No authentication parameters specified")
 
+		# keep false to preserve token.
+		self.logout_on_exit = False 
+		
 		try:
 			# connect with server
 			self.client = MatrixClient(host, user_id=userid, token=token)
@@ -52,6 +55,7 @@ class Chatbot:
 
 			if username:
 				self.client.login(username, password)
+				self.logout_on_exit = True
 				logger.info("bot connected as user: {}".format(username))
 
 		except MatrixRequestError as e:
@@ -122,9 +126,12 @@ class Chatbot:
 
 
 	def logout(self):
-		self.client.logout()
-		logger.info("bot logged out.")
-		# print("DEBUG: bot --> logout")
+		if self.logout_on_exit:
+			self.client.logout()	
+			logger.info("bot logged out.")
+		else:
+			logger.info("bot token is preserved.")
+		
 
 
 # vim: set noet ts=4 sw=4:
