@@ -279,7 +279,7 @@ class Message:
 		
 		# add child html:
 		if len(self.childs) != 0:
-			html += "<details><ul>\n"
+			html += "<details><summary>Opvolgende meldingen</summary><ul>\n"
 			
 			for c in self.childs:
 				html += '<li>' + c.to_html() + '</li>'
