@@ -88,7 +88,7 @@ class Message:
 	
 	def __init__(self, raw, meta):
 		# add raw body content (str)
-		self.lines = raw.splitlines()
+		self.lines = [l.strip() for l in raw.splitlines()]
 		
 		# add meta data (dict)
 		self.meta = meta
