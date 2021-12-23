@@ -181,8 +181,8 @@ class Message:
 			self.hierarchy = self.HierarchyType.SECONDARY
 			self.fertility = self.Fertility(True)
 			
-		# rule 8.1.a: status == "Informatie" && subject matches "Ring .. protocol error 0000" -> Low priority primary without secondaries
-		elif self.status == "Informatie" and " protocol error 0000" in self.subject:
+		# rule 8.1.a: status == "Informatie" && subject matches "Ring .. protocol error 00000" -> Low priority primary without secondaries
+		elif self.status == "Informatie" and " protocol error 00000" in self.subject:
 			logger.debug("_parser match Rule 8.1.a")
 			self.prio = self.Priority.LOW
 			self.hierarchy = self.HierarchyType.PRIMARY
