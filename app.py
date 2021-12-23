@@ -109,16 +109,12 @@ if __name__ == '__main__':
 	# add exit callback: bot.logout()
 	# signal_handler_stop_callbacks_last.append(bot.logout)
 
-	# print startup text:
+	# print startup message:
 	startup_text = config.get('main','startup_text', fallback=None)
-	if startup_text is not None:
-		bot.talk(body=startup_text, notice=True)
-		
-	# print startup html:
 	startup_html = config.get('main','startup_html', fallback=None)
-	if startup_html is not None:
-		bot.talk(body_html=startup_html)
-	
+	if startup_text is not None or startup_html is not None:
+		bot.talk(body=startup_text, body_html=startup_html, notice=True)
+		
 	# serial conf:
 	serial_conf = {	'port': config.get('serial','port'), 
 					'baudrate': config.getint('serial','baudrate', fallback=-1), # use -1 for None
@@ -155,13 +151,9 @@ if __name__ == '__main__':
 	
 	# print shutdown text:
 	shutdown_text = config.get('main','shutdown_text', fallback=None)
-	if shutdown_text is not None:
-		bot.talk(body=shutdown_text, notice=True)
-		
-	# print shutdown html:
 	shutdown_html = config.get('main','shutdown_html', fallback=None)
-	if shutdown_html is not None:
-		bot.talk(body_html=shutdown_html)
+	if shutdown_text is not None or shutdown_html is not None:
+		bot.talk(body=shutdown_text, body_html=shutdown_html, notice=True)
 
 	# matrix exit:
 	bot.logout()
