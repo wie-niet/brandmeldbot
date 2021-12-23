@@ -208,6 +208,13 @@ class Message:
 			self.prio = self.Priority.NORMAL
 			self.hierarchy = self.HierarchyType.PRIMARY
 			self.fertility = self.Fertility(False)
+
+		# rule 9: status == "Brandweer waarschuwen" -> High priority secondary without secondaries
+		elif self.status == "Brandweer waarschuwen":
+			logger.debug("_parser match Rule 9")
+			self.prio = self.Priority.HIGH
+			self.hierarchy = self.HierarchyType.SECONDARY
+			self.fertility = self.Fertility(False)
 		
 		# rule (All others) -> Normal priority primary without secondaries
 		else:
