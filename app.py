@@ -112,12 +112,12 @@ if __name__ == '__main__':
 	# print startup text:
 	startup_text = config.get('main','startup_text', fallback=None)
 	if startup_text is not None:
-		bot.talk(startup_text)
+		bot.talk(body=startup_text, notice=True)
 		
 	# print startup html:
 	startup_html = config.get('main','startup_html', fallback=None)
 	if startup_html is not None:
-		bot.talk(startup_html, 'html')
+		bot.talk(body_html=startup_html)
 	
 	# serial conf:
 	serial_conf = {	'port': config.get('serial','port'), 
@@ -135,10 +135,17 @@ if __name__ == '__main__':
 		# bot.talk(message.to_html(), 'html')
 		if message.parent and 'matrix_event_id' in message.parent.meta:
 				# we have a child message with an previous send message: update parent:
-				bot.update_talk(message.parent.meta['matrix_event_id'] , message.body, body_html=message.parent.to_html())
+				bot.update_talk(
+					event_id=message.parent.meta['matrix_event_id'],
+					body=message.body,
+					new_body=message.body,
+					new_body_html=message.parent.to_html(),
+				)
 		else:
 			# simply snd message:
-			matrix = bot.talk(message.to_html(), 'html')
+			matrix = bot.talk(
+				body_html=message.to_html(),
+			)
 			message.meta['matrix_event_id'] = matrix['event_id']
 		
 			
@@ -149,12 +156,12 @@ if __name__ == '__main__':
 	# print shutdown text:
 	shutdown_text = config.get('main','shutdown_text', fallback=None)
 	if shutdown_text is not None:
-		bot.talk(shutdown_text)
+		bot.talk(body=shutdown_text, notice=True)
 		
 	# print shutdown html:
 	shutdown_html = config.get('main','shutdown_html', fallback=None)
 	if shutdown_html is not None:
-		bot.talk(shutdown_html, 'html')
+		bot.talk(body_html=shutdown_html)
 
 	# matrix exit:
 	bot.logout()

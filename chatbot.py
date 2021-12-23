@@ -2,6 +2,7 @@
 # element.io SDK
 from matrix_client.client import MatrixClient, MatrixRequestError
 from requests.exceptions import MissingSchema
+import re
 from enum import Enum
 
 import matrix_client.client
@@ -110,45 +111,69 @@ class Chatbot:
 	# 	else:
 	# 		print(event['type'])
 		
-	def talk(self, msg, type=MessageType.NOTICE):
+	def talk(self, body=None, body_html=None, notice=False):
 		"""talk message in any type"""
 		# log msg line:
-		logger.info("talk: type={} '{}')".format(MessageType(type),repr(msg)))
+		logger.info("talk: body={}, body_html={}, notice={})".format(repr(body), repr(body_html), notice))
+		return self.send_message(body=body, body_html=body_html, notice=notice)
 
-		# send message into chat room
-		if MessageType(type) == MessageType.NOTICE:
-			return self.room.send_notice(msg)
-		elif MessageType(type) == MessageType.TEXT:
-			return self.room.send_text(msg)
-		elif MessageType(type) == MessageType.HTML:
-			return self.room.send_html(msg)
-
-	def update_talk(self, event_id, body, body_html=None, room_id=None):
+	def update_talk(self, event_id, new_body=None, body=None, body_html=None, new_body_html=None, room_id=None, notice=False):
 		"""Update existing message. 
 			a bit reversed engineerd but seems to work.
 		"""
+		logger.info("update: new_body={} new_body_html={} body={} body_html={})".format(repr(new_body), repr(body_html), repr(body), repr(body_html)))
+		return self.send_message(event_id=event_id, body=body, new_body=new_body, body_html=body_html, new_body_html=new_body_html, room_id=room_id)
 
-		logger.info("update: body={} body_html={})".format(repr(body),repr(body_html)))
-		
+	def send_message(self, body=None, new_body=None, body_html=None, new_body_html=None, event_id=None, room_id=None, notice=False):
 		# set our own room id if not defined.
 		if not room_id:
 			room_id = self.room.room_id
 		
-		
-		# base message
-		content = {'m.relates_to': {'rel_type': 'm.replace', 'event_id': event_id}, 'm.new_content': {'msgtype': 'm.text'}, 'msgtype': 'm.text'}
-	
-		# add plain body
-		content['body'] = body
-		content['m.new_content']['body'] = body
+		content = {}
 
-		# incase of html
+		if notice:
+			content['msgtype'] = 'm.notice'
+		else:
+			content['msgtype'] = 'm.text'
+
+		# add body of the update (for new messages, and for clients that do
+		# not understand edits)
+		if not body and body_html:
+			body = re.sub('<[^<]+?>', '', body_html)
+		elif not body:
+			raise Exception("body or body_html is required")
+
+		content['body'] = body
 		if body_html:
-			content['m.new_content']['format'] = "org.matrix.custom.html"
-			content['m.new_content']['formatted_body'] = body_html
+			content['format'] = "org.matrix.custom.html"
+			content['formatted_body'] = body_html
+
+		if event_id:
+			if not new_body and new_body_html:
+				new_body = re.sub('<[^<]+?>', '', new_body_html)
+			elif not new_body:
+				raise Exception("new_body is required for updates")
+
+			# This is the actual updated message as rendered by clients that
+			# do understand edits
+			content['m.new_content'] = {
+				'msgtype': 'm.text',
+				'body': new_body,
+			}
+
+			if new_body_html:
+				content['m.new_content']['format'] = "org.matrix.custom.html"
+				content['m.new_content']['formatted_body'] = new_body_html
+
+			content['m.relates_to'] = {
+				'rel_type': 'm.replace',
+				'event_id': event_id,
+			}
+		else:
+			if new_body or new_body_html:
+				raise Exception("new_body and new_body_html only valid for updates")
 		
 		return self.client.api.send_message_event(room_id,'m.room.message', content)
-
 
 
 	def logout(self):
