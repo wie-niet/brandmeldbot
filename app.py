@@ -136,12 +136,14 @@ if __name__ == '__main__':
 					body=message.to_text(),
 					new_body=message.parent.to_text(),
 					new_body_html=message.parent.to_html(),
+					notice=(message.parent.prio == message.Priority.LOW),
 				)
 		else:
 			# simply snd message:
 			matrix = bot.talk(
 				body=message.to_text(),
 				body_html=message.to_html(),
+				notice=(message.prio == message.Priority.LOW),
 			)
 			message.meta['matrix_event_id'] = matrix['event_id']
 		
