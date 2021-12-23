@@ -88,7 +88,7 @@ class Message:
 	
 	def __init__(self, raw, meta):
 		# add raw body content (str)
-		self.raw = raw
+		self.lines = raw.splitlines()
 		
 		# add meta data (dict)
 		self.meta = meta
@@ -246,7 +246,7 @@ class Message:
 	@property	
 	def bmc_time_str(self):
 		"""parse time from Brand Meld Centrale (line[0] in log)"""
-		return(self.raw.splitlines()[0])
+		return(self.lines[0])
 
 	@property	
 	def bmc_time(self):
@@ -261,12 +261,12 @@ class Message:
 	@property
 	def status(self):
 		"""parse status from Brand Meld Centrale (line[1] in log)"""
-		return self.raw.splitlines()[1]
+		return self.lines[1]
 		
 	@property
 	def subject(self):
 		"""parse subject from Brand Meld Centrale (line[2:] in log)"""
-		return '\n'.join(self.raw.splitlines()[2:])	
+		return '\n'.join(self.lines[2:])	
 
 	def __str__(self):
 		# return self.raw
@@ -274,7 +274,7 @@ class Message:
 
 	def __repr__(self):
 		# return self.raw
-		return f'{self.__class__.__name__}({repr(self.raw)}, {repr(self.meta)})'
+		return f'{self.__class__.__name__}({repr(self.lines)}, {repr(self.meta)})'
 	
 	def to_html(self):
 		# html = "<code>" + self.__str__().replace("\n","<br>\n") + "</code>"
