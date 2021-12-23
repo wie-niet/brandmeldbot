@@ -44,7 +44,7 @@ class Parser:
 		if not parent:
 			logger.debug("No parent, upgrading secondary")
 			Parser.setParent(child)
-		elif not parent.fertility:
+		elif parent.fertility != Message.Fertility.CAN_HAVE_CHILDREN:
 			logger.debug("Parent not fertile, upgrading secondary")
 			Parser.setParent(child)
 		elif child.bmc_time - parent.last_child_bmc_time >= timedelta(seconds=Parser.INFERTILITY_SECS):
