@@ -46,7 +46,7 @@ class Parser:
 		elif not parent.fertility:
 			logger.debug("Parent not fertile, upgrading secondary")
 			Parser.setParent(child)
-		elif parent.bmc_time + Parser.INFERTILITY_SECS >= child.bmc_time:
+		elif child.bmc_time >= parent.bmc_time + Parser.INFERTILITY_SECS:
 			logger.debug("Parent too old, upgrading secondary")
 			Parser.setParent(child)
 		else:
