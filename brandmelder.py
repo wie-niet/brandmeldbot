@@ -269,7 +269,7 @@ class Message:
 	@property
 	def subject(self):
 		"""parse subject from Brand Meld Centrale (line[2:] in log)"""
-		return '\n'.join(self.lines[2:])	
+		return ' — '.join(self.lines[2:])	
 
 	def __str__(self):
 		# return self.raw
