@@ -139,7 +139,7 @@ if __name__ == '__main__':
 		else:
 			# simply snd message:
 			matrix = bot.talk(message.to_html(), 'html')
-			message.meta['chat_event_id'] = matrix['event_id']
+			message.meta['matrix_event_id'] = matrix['event_id']
 		
 			
 			
