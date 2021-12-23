@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 class Parser:
 	# Config:
 	END_OF_MESSAGE = '- - - - - - - - - - - - - - - - - - - - '
-	STRPTIME_FORMAT = '%d-%m-%Y %H:%M:%S'
+	STRPTIME_FORMAT = '%d-%m-%Y  %H:%M:%S'
 	INFERTILITY_SECS = 2 # how mucht seconds is maximum between BMC timstamp of parent vs. child messages.
 
 	# Cache:
