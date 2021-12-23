@@ -46,7 +46,7 @@ class Parser:
 		
 		# only accept children with same bmc_timestamp or les than 2secs younger. 
 		if parent.bmc_time + Parser.INFERTILITY_SECS >= child.bmc_time: # we don't mind check if the child is older than us, that will never happen
-			if parent.infertility:
+			if parent.fertility:
 				# add child to parent
 				parent.childs.append(child)	
 				# add parent to child
@@ -78,7 +78,7 @@ class Message:
 		LOW=1    
 		UNKNOWN=0
 	
-	class Infertility(Enum):
+	class Fertility(Enum):
 		CAN_HAVE_CHILDREN=True	
 		CAN_NOT_HAVE_CHILDREN=False
 		NOT_SET=None
@@ -100,7 +100,7 @@ class Message:
 		# # hierarchy type
 		# self.hierarchy = self.HierarchyType.UNKNOWN
 		# self.prio = self.Priority.UNKNOWN
-		# self.infertility = self.Infertility.NOT_SET
+		# self.fertility = self.Fertility.NOT_SET
 		#
 		# # placeholder for my parent
 		# self.parent = None
@@ -126,7 +126,7 @@ class Message:
 		# 	self.body
 		# ))
 		logger.info("messagage## msg = {}".format(repr(self)))
-		logger.info("messagage _parsed: {}, {}, {}".format(self.hierarchy, self.prio, self.infertility))
+		logger.info("messagage _parsed: {}, {}, {}".format(self.hierarchy, self.prio, self.fertility))
 	
 	@staticmethod
 	def foster(bmc_time_str):
@@ -144,14 +144,14 @@ class Message:
 			logger.debug("_parser match Rule 0")
 			self.prio = self.Priority.NORMAL
 			self.hierarchy = self.HierarchyType.PRIMARY
-			self.infertility = self.Infertility(True)
+			self.fertility = self.Fertility(True)
 
 		# rule 1: status == "Alarm" -> High priority primary with secondaries, + collect subject in active_alarm_cache
 		elif self.status == "Alarm":
 			logger.debug("_parser match Rule 1")
 			self.prio = self.Priority.HIGH
 			self.hierarchy = self.HierarchyType.PRIMARY
-			self.infertility = self.Infertility(True)
+			self.fertility = self.Fertility(True)
 			
 			# add line 2 (subect) to the COLLECTED_ALARMS
 			if self.subject not in Parser.COLLECTED_ALARMS:
@@ -162,28 +162,28 @@ class Message:
 			logger.debug("_parser match Rule 2")
 			self.prio = self.Priority.HIGH
 			self.hierarchy = self.HierarchyType.SECONDARY
-			self.infertility = self.Infertility(True)
+			self.fertility = self.Fertility(True)
 			
 		# rule 3: status == "Storing" -> High priority primary with secondaries
 		elif self.status == "Storing":
 			logger.debug("_parser match Rule 3")
 			self.prio = self.Priority.HIGH
 			self.hierarchy = self.HierarchyType.PRIMARY
-			self.infertility = self.Infertility(True)
+			self.fertility = self.Fertility(True)
 			
 		# rule 4: status == "Geactiveerd" -> Normal priority secondary without secondaries (without secondaries because I think this is never the cause of something, but I'm not entirely sure)
 		elif self.status == "Geactiveerd":
 			logger.debug("_parser match Rule 4")
 			self.prio = self.Priority.NORMAL
 			self.hierarchy = self.HierarchyType.SECONDARY
-			self.infertility = self.Infertility(False)
+			self.fertility = self.Fertility(False)
 
 		# rule 5: status == "In rust" -> Normal priority secondary with secondaries (this will often be triggered as a secondary, but might also be upgraded to a primary when triggered first)
 		elif self.status == "In rust":
 			logger.debug("_parser match Rule 5")
 			self.prio = self.Priority.NORMAL
 			self.hierarchy = self.HierarchyType.SECONDARY
-			self.infertility = self.Infertility(False)
+			self.fertility = self.Fertility(False)
 		
 			# rule 5.b: ... but might also be upgraded to a primary when triggered first.
 			if self.subject in Parser.COLLECTED_ALARMS:
@@ -196,49 +196,49 @@ class Message:
 			logger.debug("_parser match Rule 6")
 			self.prio = self.Priority.NORMAL
 			self.hierarchy = self.HierarchyType.PRIMARY
-			self.infertility = self.Infertility(True)
+			self.fertility = self.Fertility(True)
 			
 		# rule 7: status == "Aan" || status == "Uit" -> Normal priority secondary with secondaries ( ???-> Also expected to occur as primary or secondary, for example when disabling all sounders or all doormeldingen, etc.)
 		elif self.status == "Aan" or self.status == "Uit":
 			logger.debug("_parser match Rule 7")
 			self.prio = self.Priority.NORMAL
 			self.hierarchy = self.HierarchyType.SECONDARY
-			self.infertility = self.Infertility(True)
+			self.fertility = self.Fertility(True)
 			
 		# rule 8.1.a: status == "Informatie" && subject matches "Ring .. protocol error 0000" -> Low priority primary without secondaries
 		elif self.status == "Informatie" and " protocol error 0000" in self.subject:
 			logger.debug("_parser match Rule 8.1.a")
 			self.prio = self.Priority.LOW
 			self.hierarchy = self.HierarchyType.PRIMARY
-			self.infertility = self.Infertility(False)
+			self.fertility = self.Fertility(False)
 
 		# rule 8.1.b: status == "Informatie" && subject matches "Ring .. protocol error ...." -> Normal priority primary without secondaries
 		elif self.status == "Informatie" and " protocol error " in self.subject:
 			logger.debug("_parser match Rule 8.1.b")
 			self.prio = self.Priority.NORMAL
 			self.hierarchy = self.HierarchyType.PRIMARY
-			self.infertility = self.Infertility(False)
+			self.fertility = self.Fertility(False)
 			
 		# rule 8.2: status == "Informatie" && subject matches "Tijdprogramma.*" -> Low priority primary with secondaries
 		elif self.status == "Informatie" and "Tijdprogramma " in self.subject:
 			logger.debug("_parser match Rule 8.2")
 			self.prio = self.Priority.LOW
 			self.hierarchy = self.HierarchyType.PRIMARY
-			self.infertility = self.Infertility(True)
+			self.fertility = self.Fertility(True)
 			
 		# rule 8.z: status == "Informatie" -> Normal priority primary without secondaries
 		elif self.status == "Informatie":
 			logger.debug("_parser match Rule 8.z")
 			self.prio = self.Priority.NORMAL
 			self.hierarchy = self.HierarchyType.PRIMARY
-			self.infertility = self.Infertility(False)
+			self.fertility = self.Fertility(False)
 		
 		# rule (All others) -> Normal priority primary without secondaries
 		else:
 			logger.debug("_parser match Rule 'All others'")
 			self.prio = self.Priority.NORMAL
 			self.hierarchy = self.HierarchyType.PRIMARY
-			self.infertility = self.Infertility(False)
+			self.fertility = self.Fertility(False)
 			
 
 		#
@@ -256,7 +256,7 @@ class Message:
 
 		#
 		# i can have children, so I am the next parent:
-		if self.infertility == self.Infertility.CAN_HAVE_CHILDREN:
+		if self.fertility == self.Fertility.CAN_HAVE_CHILDREN:
 			logger.debug("_parser: setParent'")
 			Parser.setParent(self)
 			
