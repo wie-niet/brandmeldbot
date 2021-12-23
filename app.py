@@ -117,7 +117,7 @@ if __name__ == '__main__':
 	# print startup html:
 	startup_html = config.get('main','startup_html', fallback=None)
 	if startup_html is not None:
-		bot.room.send_html(startup_html)
+		bot.talk(startup_html, 'html')
 	
 	# serial conf:
 	serial_conf = {	'port': config.get('serial','port'), 
@@ -145,7 +145,7 @@ if __name__ == '__main__':
 	# print shutdown html:
 	shutdown_html = config.get('main','shutdown_html', fallback=None)
 	if shutdown_html is not None:
-		bot.room.send_html(shutdown_html)
+		bot.talk(shutdown_html, 'html')
 
 	# matrix exit:
 	bot.logout()
