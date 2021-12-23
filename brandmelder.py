@@ -131,26 +131,9 @@ class Message:
 		logger.info("messagage## msg = {}".format(repr(self)))
 		logger.info("messagage _parsed: {}, {}, {}".format(self.hierarchy, self.prio, self.fertility))
 	
-	@staticmethod
-	def foster(bmc_time_str):
-		'''Generate Foster Parent (empty parent to add childs to.)'''
-		# if not bmc_time_str:
-		# 	bmc_time_str = time.strftime('%d-%m-%Y %H:%M:%S',time.gmtime(time.time())
-		
-		msg = Message(bmc_time_str + '\nFoster Parent\nunexpected child messages\n', {})
-		return msg
-		
-
 	def _parser(self):
-		# rule 0: status == "Foster Parent" -> High priority primary with secondaries, + collect subject in active_alarm_cache
-		if self.status == "Foster Parent":
-			logger.debug("_parser match Rule 0")
-			self.prio = self.Priority.NORMAL
-			self.hierarchy = self.HierarchyType.PRIMARY
-			self.fertility = self.Fertility(True)
-
 		# rule 1: status == "Alarm" -> High priority primary with secondaries, + collect subject in active_alarm_cache
-		elif self.status == "Alarm":
+		if self.status == "Alarm":
 			logger.debug("_parser match Rule 1")
 			self.prio = self.Priority.HIGH
 			self.hierarchy = self.HierarchyType.PRIMARY

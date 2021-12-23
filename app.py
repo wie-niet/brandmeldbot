@@ -133,15 +133,9 @@ if __name__ == '__main__':
 		# bot.talk(message)
 		# bot.talk(message, 'text')
 		# bot.talk(message.to_html(), 'html')
-		if message.parent:
-			if 'matrix_event_id' in message.parent.meta:
+		if message.parent and 'matrix_event_id' in message.parent.meta:
 				# we have a child message with an previous send message: update parent:
 				bot.update_talk(message.parent.meta['matrix_event_id'] , message.body, body_html=message.parent.to_html())
-			else:
-				# Foster parent message: just send out parent
-				matrix = bot.talk(message.parent.to_html(), 'html')
-				message.parent.meta['matrix_event_id'] = matrix['event_id']
-				
 		else:
 			# simply snd message:
 			matrix = bot.talk(message.to_html(), 'html')
