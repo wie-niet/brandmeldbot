@@ -121,8 +121,8 @@ class Chatbot:
 		"""Update existing message. 
 			a bit reversed engineerd but seems to work.
 		"""
-		logger.info("update: new_body={} new_body_html={} body={} body_html={})".format(repr(new_body), repr(body_html), repr(body), repr(body_html)))
-		return self.send_message(event_id=event_id, body=body, new_body=new_body, body_html=body_html, new_body_html=new_body_html, room_id=room_id)
+		logger.info("update: new_body={} new_body_html={} body={} body_html={} notice={})".format(repr(new_body), repr(body_html), repr(body), repr(body_html), notice))
+		return self.send_message(event_id=event_id, body=body, new_body=new_body, body_html=body_html, new_body_html=new_body_html, room_id=room_id, notice=notice)
 
 	def send_message(self, body=None, new_body=None, body_html=None, new_body_html=None, event_id=None, room_id=None, notice=False):
 		# set our own room id if not defined.
@@ -157,7 +157,7 @@ class Chatbot:
 			# This is the actual updated message as rendered by clients that
 			# do understand edits
 			content['m.new_content'] = {
-				'msgtype': 'm.text',
+				'msgtype': content['msgtype'],
 				'body': new_body,
 			}
 
