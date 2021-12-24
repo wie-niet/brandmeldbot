@@ -50,6 +50,9 @@ class Parser:
 		elif child.bmc_time - parent.last_child_bmc_time >= timedelta(seconds=Parser.INFERTILITY_SECS):
 			logger.debug("Parent too old, upgrading secondary")
 			Parser.setParent(child)
+		elif child.prio == Message.Priority.HIGH and child.prio != Message.Priority.HIGH:
+			logger.debug("Parent not HIGH prio, upgrading secondary")
+			Parser.setParent(child)
 		else:
 			# add child to parent
 			parent.childs.append(child)	
