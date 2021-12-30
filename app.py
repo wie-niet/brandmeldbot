@@ -126,9 +126,6 @@ if __name__ == '__main__':
 	#
 	for message in bmi.serial_reader(serial_conf):
 		# send message over chat
-		# bot.talk(message)
-		# bot.talk(message, 'text')
-		# bot.talk(message.to_html(), 'html')
 		if message.parent and 'matrix_event_id' in message.parent.meta:
 				# we have a child message with an previous send message: update parent:
 				bot.update_talk(
