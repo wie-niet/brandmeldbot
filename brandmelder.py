@@ -285,14 +285,16 @@ class Message:
 	def to_text(self):
 		text = ' - ' if self.parent else ''
 		text += f'{self.status}: {self.subject}'
+		text += ' @room' if self.prio == self.Priority.HIGH and not self.parent else '' # add Matrix chat alert
 		for c in self.childs:
 			text += c.to_text()
+
 		return text
 
 
 	def to_html(self):
-		# html = "<code>" + self.__str__().replace("\n","<br>\n") + "</code>"
-		html = f'<b>{self.status}</b> {self.subject} <br>\n'
+		alert = ' @room' if self.prio == self.Priority.HIGH and not self.parent else '' # add Matrix chat alert
+		html = f'<b>{self.status}</b> {self.subject}{alert}<br>\n'
 		
 		# add child html:
 		if len(self.childs) != 0:
@@ -302,7 +304,6 @@ class Message:
 				html += '<li>' + c.to_html() + '</li>'
 
 			html += "<ul></details>\n"
-
 
 		return html
 
