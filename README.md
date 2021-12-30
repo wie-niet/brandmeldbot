@@ -18,4 +18,6 @@ Edit if needed, make sure the path and user are set correctly.
 	systemctl daemon-reload
 	systemctl enable brandmeldbot
 
-
+### config.ini
+Copy defaults form `config-default.ini` and save tham as `config.ini`.
+In order to get a login token, use the `./login.py`, or simply configure the username + password in `config.ini`.
