@@ -177,8 +177,8 @@ class Message:
 			self.hierarchy = self.HierarchyType.PRIMARY
 			self.fertility = self.Fertility(True)
 			
-		# rule 7: status == "Aan" || status == "Uit" -> Normal priority secondary with secondaries ( ???-> Also expected to occur as primary or secondary, for example when disabling all sounders or all doormeldingen, etc.)
-		elif self.status == "Aan" or self.status == "Uit":
+		# rule 7: status == "Aan" || status == "Uitschakeling" -> Normal priority secondary with secondaries ( ???-> Also expected to occur as primary or secondary, for example when disabling all sounders or all doormeldingen, etc.)
+		elif self.status == "Aan" or self.status == "Uitschakeling":
 			logger.debug("_parser match Rule 7")
 			self.prio = self.Priority.NORMAL
 			self.hierarchy = self.HierarchyType.SECONDARY
