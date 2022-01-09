@@ -9,8 +9,12 @@ User=root
 WorkingDirectory=/opt/brandmeldbot/
 ExecStart=/opt/brandmeldbot/app.py
 ExecReload=kill -HUP $MAINPID
-Restart=on-failure
-# Other Restart options: or always, on-abort, etc
+# This is a critical service, so always restart (even if it would somehow
+# cleanly exit), and never stop trying to restart.
+Restart=always
+StartLimitIntervalSec=0
+# To prevent continuously restarting, add a bit of delay
+RestartSec=10
 
 [Install]
 WantedBy=multi-user.target
